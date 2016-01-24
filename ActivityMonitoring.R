@@ -57,7 +57,8 @@ activity <- read.csv(paste("./", dataFolderName, "/", dataFileName, sep=""))
 print("Reading data completed.")
 
 # Preprocessing - Create datetime from date and interval.
-activity$datetime <- strptime(paste(activity$date, formatC(activity$interval, width=4, flag="0")), "%Y-%m-%d %H%M")
+activity$intervalstring <- formatC(activity$interval, width=4, flag="0")
+activity$datetime <- strptime(paste(activity$date, activity$intervalstring), "%Y-%m-%d %H%M")
 
 ####
 #
@@ -99,18 +100,20 @@ print(paste("Median Steps Per Day = ", medianTotalStepsPerDay, sep=""))
 
 # Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken,
 #   averaged across all days (y-axis)
-meanStepsPerInterval <- aggregate(activity$steps, by = list(activity$interval), FUN=mean, na.rm=TRUE)
-names(meanStepsPerInterval) <- c("interval", "steps")
+meanStepsPerInterval <- aggregate(activity$steps, by = list(activity$intervalstring), FUN=mean, na.rm=TRUE)
+names(meanStepsPerInterval) <- c("intervalstring", "steps")
 
 png(filename = paste("./", plotFolderName, "/", "StepsPerInterval.png", sep=""), width = 480, height = 480, units = "px")
-plot((strptime(formatC(meanStepsPerInterval$interval, width=4, flag="0"), "%H%M")$hour * 60
-      +strptime(formatC(meanStepsPerInterval$interval, width=4, flag="0"), "%H%M")$min),
-     meanStepsPerInterval$steps, type="l",
-     main="Mean Steps Per Interval", xlab="Interval in Minutes From Midnight, NOT 24-hour Time", ylab="Mean Steps",
+plot(meanStepsPerInterval$steps, type="l", axes=FALSE, ann=FALSE,
      ylim=c(0, max(maxMeanSteps, meanStepsPerInterval$steps, na.rm=TRUE)), col = "blue")
 abline(h = mean(meanStepsPerInterval$steps), col = "red")
-legend("topright", c("Steps Per Interval", "Daily Average Steps"),lty=c(1,1),col=c("blue","red"))
+legend("topright", c("Mean Steps Per Interval", "Average Mean Steps Per Interval "),lty=c(1,1),col=c("blue","red"))
+axis(1, at=1:nrow(meanStepsPerInterval), lab=meanStepsPerInterval$intervalstring)
+axis(2, las=1, at=50*0:maxMeanSteps)
+box()
+title(main="Mean Steps Per Interval", xlab="Interval", ylab="Mean Steps Per Interval")
 dev.off()
+
 
 # Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 meanIntervalWithMostStepsValue <- round(max(meanStepsPerInterval$steps))
@@ -160,7 +163,13 @@ for (i in 1:nrow(activity)) {
 #    print(totalStepsPerDay$steps[day])
 #    print(meanStepsPerInterval$steps[interval])
 #    print(paste("i = ", i, "   day = ", day, "    interval = ", interval, "   steps = ", imputedActivity_di$steps[i], sep=""))
-    checkcount <- checkcount + 1
+
+#    print(paste("i = ",i, " day = ",day, " interval = ",interval, " intervalstring = ",activity$intervalstring[i],
+#               " steps = ",activity$steps[i], sep=""))
+#   print(paste("totalStepsPerDay$steps[day] = ", totalStepsPerDay$steps[day]/nrow(meanStepsPerInterval), sep=""))
+#   print(paste("meanStepsPerInterval$steps[interval] = ", meanStepsPerInterval$steps[interval], sep=""))
+
+        checkcount <- checkcount + 1
   }
 }
 
